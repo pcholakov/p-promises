@@ -8,8 +8,8 @@ type TResolvePromiseRequest = (id: int, value: TValue, worker: Worker);
 event RejectPromiseRequest: TRejectPromiseRequest;
 type TRejectPromiseRequest = (id: int, worker: Worker);
 
-event CancelPromiseRequest: TCancelPromiseRequest;
-type TCancelPromiseRequest =(id: int, worker: Worker);
+// event CancelPromiseRequest: TCancelPromiseRequest;
+// type TCancelPromiseRequest =(id: int, worker: Worker);
 
 event GetPromiseRequest: TGetPromiseRequest;
 type TGetPromiseRequest =(id: int, client: machine);
@@ -21,13 +21,12 @@ machine Promise
 {
   var id: int;
   var value: TValue;
-  var timeout: int;
+  // var timeout: int;
 
   start state Init {
-    entry (config: (id: int, timeout: int)) {
-      id = config.id;
-      timeout = config.timeout;
-      // value = null;
+    entry (_id: int) {
+      id = _id;
+      // timeout = _timeout;
 
       goto Pending;
     }
@@ -37,6 +36,7 @@ machine Promise
     on ResolvePromiseRequest do (request: TResolvePromiseRequest) {
       if (request.id == id && value == null) {
         value = request.value;
+        announce PromiseStateChanged, (id = id, status = RESOLVED, value = value);
         goto Resolved;
       }
     }
@@ -47,11 +47,11 @@ machine Promise
       }
     }
     
-    on CancelPromiseRequest do (request: TCancelPromiseRequest) {
-      if (request.id == id) {
-        goto RejectedCanceled;
-      }
-    }
+    // on CancelPromiseRequest do (request: TCancelPromiseRequest) {
+	    //   if (request.id == id) {
+		    //     goto RejectedCanceled;
+    //   }
+    // }
   }
 
   state Resolved {
@@ -70,11 +70,11 @@ machine Promise
 	  }
   }
 
-  state RejectedCanceled {
-    on GetPromiseRequest do (request: TGetPromiseRequest) {
-      if (request.id == id) {
-        send request.client, GetPromiseResponse, (id = id, status = REJECTED_CANCELED, value = value);
-      }
-	  }
-  }
+  // state RejectedCanceled {
+	  //   on GetPromiseRequest do (request: TGetPromiseRequest) {
+	  //     if (request.id == id) {
+	  //       send request.client, GetPromiseResponse, (id = id, status = REJECTED_CANCELED, value = value);
+  //     }
+	//   }
+  // }
 }

@@ -16,7 +16,7 @@ machine Worker
     entry {
       var outcome: int;
 
-      // Non-determinism: we could either succeed, encounter an error (and notify the promise), or crash
+      // Non-determinism: we could either succeed, encounter an error (and reject the promise), or just crash
       outcome = choose(3);
       if (outcome == 0) {
         computedValue = "<result>";
