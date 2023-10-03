@@ -43,6 +43,7 @@ machine Promise
 
     on RejectPromiseRequest do (request: TRejectPromiseRequest) {
       if (request.id == id) {
+        announce PromiseStateChanged, (id = id, status = RESOLVED, value = value);
         goto Rejected;
       }
     }
@@ -72,8 +73,8 @@ machine Promise
 
   // state RejectedCanceled {
 	  //   on GetPromiseRequest do (request: TGetPromiseRequest) {
-	  //     if (request.id == id) {
-	  //       send request.client, GetPromiseResponse, (id = id, status = REJECTED_CANCELED, value = value);
+		  //     if (request.id == id) {
+		  //       send request.client, GetPromiseResponse, (id = id, status = REJECTED_CANCELED, value = value);
   //     }
 	//   }
   // }

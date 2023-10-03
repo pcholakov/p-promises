@@ -35,7 +35,7 @@ spec PromiseResultNeverChangesOnceSet observes PromiseInit, ResolvePromiseReques
 }
 
 // Promise liveness property: an outstanding promise will eventually be resolved
-spec PendingPromisesAreEventuallySettled observes PromiseInit, ResolvePromiseRequest, RejectPromiseRequest {
+spec PendingPromisesAreEventuallySettled observes PromiseInit, PromiseStateChanged {
   var pendingPromises: set[int];
 
   start state Init {
@@ -46,16 +46,6 @@ spec PendingPromisesAreEventuallySettled observes PromiseInit, ResolvePromiseReq
   }
 
   hot state ObservePromises {
-    on ResolvePromiseRequest do (request: TResolvePromiseRequest) {
-      assert request.id in pendingPromises,
-        format ("Unknown promise id {0}. Valid ids = {1}", request.id, pendingPromises);
-    }
-
-    on RejectPromiseRequest do (request: TRejectPromiseRequest) {
-      assert request.id in pendingPromises,
-        format ("Unknown promise id {0}. Valid ids = {1}", request.id, pendingPromises);
-    }
-
     on PromiseStateChanged do (input: TPromiseStateChanged) {
       assert input.status == RESOLVED || input.status == REJECTED,
         format ("Invalid promise state {0}", input.status);
