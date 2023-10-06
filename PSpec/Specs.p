@@ -8,7 +8,7 @@ spec PromiseResultNeverChangesOnceSet observes PromiseInit, ResolvePromiseReques
   var promises: map[int, (status: PromiseState, value: TValue)];
 
   start state Init {
-    on PromiseInit goto ObservePromises with (config: ( id: int )) {
+    on PromiseInit goto ObservePromises with (config: (id: int)) {
         promises[config.id] = (status = PENDING, value = default(TValue));
     }
   }
@@ -47,7 +47,7 @@ spec PendingPromisesAreEventuallySettled observes PromiseInit, PromiseStateChang
 
   hot state ObservePromises {
     on PromiseStateChanged do (input: TPromiseStateChanged) {
-      assert input.status == RESOLVED || input.status == REJECTED,
+      assert input.status == RESOLVED || input.status == REJECTED || input.status == REJECTED_TIMED_OUT,
         format ("Invalid promise state {0}", input.status);
       assert input.id in pendingPromises,
         format ("Promise {0} is not pending", input.id);

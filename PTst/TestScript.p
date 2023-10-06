@@ -1,3 +1,3 @@
 test SinglePromise [main=TestWithSinglePromise]:
   assert PromiseResultNeverChangesOnceSet, PendingPromisesAreEventuallySettled in
-  (union Promise, Worker, Client, { TestWithSinglePromise });
+  (union Promise, Worker, Client, Timer, { TestWithSinglePromise });

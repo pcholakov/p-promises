@@ -1,6 +1,6 @@
 type TValue = data;
 
-enum PromiseState { PENDING, RESOLVED, REJECTED, REJECTED_CANCELED }
+enum PromiseState { PENDING, RESOLVED, REJECTED, REJECTED_CANCELED, REJECTED_TIMED_OUT }
 
 event ResolvePromiseRequest: TResolvePromiseRequest;
 type TResolvePromiseRequest = (id: int, value: TValue, worker: Worker);
@@ -12,7 +12,7 @@ type TRejectPromiseRequest = (id: int, worker: Worker);
 // type TCancelPromiseRequest =(id: int, worker: Worker);
 
 event GetPromiseRequest: TGetPromiseRequest;
-type TGetPromiseRequest =(id: int, client: machine);
+type TGetPromiseRequest = (id: int, client: machine);
 
 event GetPromiseResponse: TGetPromiseResponse;
 type TGetPromiseResponse = (id: int, status: PromiseState, value: TValue );
@@ -21,13 +21,10 @@ machine Promise
 {
   var id: int;
   var value: TValue;
-  // var timeout: int;
 
   start state Init {
     entry (_id: int) {
       id = _id;
-      // timeout = _timeout;
-
       goto Pending;
     }
   }
@@ -43,14 +40,18 @@ machine Promise
 
     on RejectPromiseRequest do (request: TRejectPromiseRequest) {
       if (request.id == id) {
-        announce PromiseStateChanged, (id = id, status = RESOLVED, value = value);
+        announce PromiseStateChanged, (id = id, status = REJECTED, value = value);
         goto Rejected;
       }
+    }
+
+    on eTimeOut goto Rejected with {
+      announce PromiseStateChanged, (id = id, status = REJECTED_TIMED_OUT, value = value);
     }
     
     // on CancelPromiseRequest do (request: TCancelPromiseRequest) {
 	    //   if (request.id == id) {
-		    //     goto RejectedCanceled;
+	    //     goto RejectedCanceled;
     //   }
     // }
   }
@@ -61,6 +62,7 @@ machine Promise
         send request.client, GetPromiseResponse, (id = id, status = RESOLVED, value = value);
       }
     }
+    ignore RejectPromiseRequest, ResolvePromiseRequest, eTimeOut;
   }
 
   state Rejected {
@@ -69,12 +71,13 @@ machine Promise
         send request.client, GetPromiseResponse, (id = id, status = REJECTED, value = value);
       }
 	  }
+    ignore RejectPromiseRequest, ResolvePromiseRequest, eTimeOut;
   }
 
   // state RejectedCanceled {
-	  //   on GetPromiseRequest do (request: TGetPromiseRequest) {
-		  //     if (request.id == id) {
-		  //       send request.client, GetPromiseResponse, (id = id, status = REJECTED_CANCELED, value = value);
+	//   on GetPromiseRequest do (request: TGetPromiseRequest) {
+		// 	  if (request.id == id) {
+		// 	    send request.client, GetPromiseResponse, (id = id, status = REJECTED_CANCELED, value = value);
   //     }
 	//   }
   // }
